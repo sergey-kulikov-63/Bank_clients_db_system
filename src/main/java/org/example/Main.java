@@ -21,7 +21,8 @@ public class Main {
                     "добавить нового клиента - 2, " +
                     "удалить клиента - 3, " +
                     "просмотреть детали клиента - 4, " +
-                    "выход - 5\nВыберите действие: ");
+                    "редактировать клиента - 5, " +
+                    "выход - 6\nВыберите действие: ");
             try {
                     int choice = sc.nextInt();
                 switch (choice){
@@ -38,9 +39,12 @@ public class Main {
                         viewClient();
                         break;
                     case 5:
+                        updateClient();
+                        break;
+                    case 6:
                         return;
                 }
-                if (choice < 1 || choice > 5){
+                if (choice < 1 || choice > 6){
                     throw new InputMismatchException();
                 }
             } catch (InputMismatchException e){
@@ -101,7 +105,7 @@ public class Main {
             deleteClient();
         }
     }
-    public static void viewClient() throws SQLException {
+    public static int viewClient() throws SQLException {
         try {
             Scanner sc = new Scanner(System.in);
             allClients();
@@ -119,9 +123,88 @@ public class Main {
                 System.out.println("Баланс на счету: " + rs.getString("balance"));
             }
             System.out.println("--------------------------------------");
+            return view;
         } catch (InputMismatchException e){
             System.out.println("Ошибка ввода! Попробуйте заново");
             viewClient();
+        }
+        return 0;
+    }
+    public static void updateClient() throws SQLException {
+        try {
+            Scanner sc = new Scanner(System.in);
+            int client = viewClient();
+            System.out.println("""
+                    Что Вы хотите изменить?
+                    ФИО - 1, возраст - 2, номер банк. счёта - 3, баланс - 4
+                    Введите номмер:\s""");
+            int choice = sc.nextInt();
+            switch (choice) {
+                case 1 -> updateFIO(client);
+                case 2 -> updateAge(client);
+                case 3 -> updateAccount(client);
+                case 4 -> updateBalance(client);
+            }
+            if (choice < 1 || choice > 4){
+                throw new InputMismatchException();
+            }
+        } catch (InputMismatchException e){
+            System.out.println("Ошибка ввода! Попробуйте заново");
+            updateClient();
+        }
+    }
+    public static void updateFIO(int client) throws SQLException {
+        System.out.print("Введите новые ФИО: ");
+        Scanner sc = new Scanner(System.in);
+        String fio = sc.nextLine();
+        PreparedStatement st = conn.prepareStatement
+                ("UPDATE users SET full_name = ? WHERE id = ?");
+        st.setString(1,fio);
+        st.setInt(2,client);
+        st.execute();
+    }
+    public static void updateAge(int client) throws SQLException {
+        try {
+            System.out.print("Введите новый возраст: ");
+            Scanner sc = new Scanner(System.in);
+            int age = sc.nextInt();
+            if (age < 1){
+                System.out.println("Ошибка! Возраст должен быть положительным числом");
+                updateAge(client);
+            }
+            PreparedStatement st = conn.prepareStatement
+                    ("UPDATE users SET age = ? WHERE id = ?");
+            st.setInt(1,age);
+            st.setInt(2,client);
+            st.execute();
+        } catch (InputMismatchException e){
+            System.out.println("Ошибка ввода! Попробуйте заново");
+            updateAge(client);
+        }
+    }
+    public static void updateAccount(int client) throws SQLException {
+        System.out.print("Введите новый банкю счёт: ");
+        Scanner sc = new Scanner(System.in);
+        String acc = sc.nextLine();
+        PreparedStatement st = conn.prepareStatement
+                ("UPDATE users SET bank_account = ? WHERE id = ?");
+        st.setString(1,acc);
+        st.setInt(2,client);
+        st.execute();
+    }
+    public static void updateBalance(int client) throws SQLException {
+        try {
+            System.out.print("Введите новый баланс: ");
+            Scanner sc = new Scanner(System.in);
+            int bal = sc.nextInt();
+            PreparedStatement st = conn.prepareStatement
+                    ("UPDATE users SET balance = ? WHERE id = ?");
+            st.setInt(1,bal);
+            st.setInt(2,client);
+            st.execute();
+        } catch (InputMismatchException e){
+            System.out.println("Ошибка ввода! Попробуйте заново");
+            updateBalance(client);
         }
     }
 }
